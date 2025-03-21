@@ -25,7 +25,15 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 springBoot {
-	mainClass = 'com.example.quiz.QuizApplication'
+	mainClass = 'com.example.Quiz.QuizApplication'
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs = ['backend/src/main/java']
+		}
+	}
 }
 
 tasks.named('test') {
