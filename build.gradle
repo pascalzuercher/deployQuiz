@@ -24,17 +24,18 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
 springBoot {
 	mainClass = 'com.example.Quiz.QuizApplication'
 }
 
 sourceSets {
 	main {
-		java {
-			srcDirs = ['backend/src/main/java']
-		}
+		java.srcDirs = ['backend/src/main/java']
+		resources.srcDirs = ['backend/src/main/resources']
 	}
 }
+
 
 tasks.named('test') {
 	useJUnitPlatform()

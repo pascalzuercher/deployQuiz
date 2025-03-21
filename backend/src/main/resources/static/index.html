@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Quiz</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="lobby">
+    <h1>Willkommen beim Multiplayer Quiz!</h1>
+    <input type="text" id="username" placeholder="Dein Name">
+    <button onclick="joinGame()">Spiel beitreten</button>
+</div>
+
+<div id="quiz" style="display: none;">
+    <h2 id="question"></h2>
+    <div id="answers"></div>
+</div>
+
+<div id="scoreboard" style="display: none;">
+    <h2>Spiel beendet!</h2>
+    <p id="final-score"></p>
+    <button onclick="location.reload()">Neustart</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
