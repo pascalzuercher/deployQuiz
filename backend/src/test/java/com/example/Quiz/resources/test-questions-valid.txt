@@ -1,0 +1,4 @@
+Was ist die Hauptstadt von Deutschland?
+A* Berlin
+B Hamburg
+C München

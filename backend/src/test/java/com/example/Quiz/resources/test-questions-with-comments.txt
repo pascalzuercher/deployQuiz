@@ -1,0 +1,5 @@
+# Dies ist ein Kommentar
+Was ist die Hauptstadt von Frankreich?
+A Paris
+B* Paris
+C Lyon
