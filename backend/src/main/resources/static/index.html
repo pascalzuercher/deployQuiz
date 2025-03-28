@@ -5,20 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplayer Quiz</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-<div id="lobby">
-    <h1>Willkommen beim Multiplayer Quiz!</h1>
+<div class="quiz-container" id="lobby">
+    <h1>🎮 Willkommen beim Multiplayer Quiz!</h1>
     <input type="text" id="username" placeholder="Dein Name">
     <button onclick="joinGame()">Spiel beitreten</button>
 </div>
 
-<div id="quiz" style="display: none;">
-    <h2 id="question"></h2>
-    <div id="answers"></div>
+<div class="quiz-container" id="quiz" style="display: none;">
+    <div class="score" id="score">SCORE: 0</div>
+
+    <div class="progress-wrapper">
+        <div class="progress-bar" id="progress-bar"></div>
+        <div class="time-number" id="timer-text">15</div>
+    </div>
+
+    <div class="question-card" id="question-card">
+        <div class="question-number" id="question-number">Frage 1 von X</div>
+        <div class="question" id="question">Frage erscheint hier...</div>
+    </div>
+
+    <div class="answers" id="answers"></div>
+    <div class="status-text" id="status-text" style="display: none;"></div>
+
 </div>
 
-<div id="scoreboard" style="display: none;">
+<div class="quiz-container" id="scoreboard" style="display: none;">
     <h2>Spiel beendet!</h2>
     <p id="final-score"></p>
     <button onclick="location.reload()">Neustart</button>
