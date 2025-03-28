@@ -1,0 +1,9 @@
+Was ist die Hauptstadt von Deutschland?
+A* Berlin
+B Hamburg
+C München
+
+Was ist die Hauptstadt von Österreich?
+A Wien
+B* Wien
+C Graz
