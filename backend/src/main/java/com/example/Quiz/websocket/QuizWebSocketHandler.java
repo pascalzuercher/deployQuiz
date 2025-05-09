@@ -29,6 +29,9 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
     // Maps WebSocket sessions to player IDs
     private final Map<WebSocketSession, String> sessionToPlayerId = new ConcurrentHashMap<>();
 
+    // Track the first correct answer for each question per game
+    private final Map<String, String> gameToFirstCorrectPlayerId = new ConcurrentHashMap<>();
+
     private final GameManager gameManager;
     private final QuestionReader questionReader;
 
@@ -169,19 +172,33 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
 
         // Check if answer is correct
         boolean isCorrect = answer.equals(currentQuestion.getCorrectAnswer());
-        if (isCorrect) {
+
+        // If correct and this is the first correct answer for this question
+        String questionKey = gameId + "-" + game.getCurrentQuestionIndex();
+        if (isCorrect && !gameToFirstCorrectPlayerId.containsKey(questionKey)) {
+            // This player is the first with the correct answer!
+            gameToFirstCorrectPlayerId.put(questionKey, playerId);
             player.addPoints(1);
+
+            // Send a special notification to this player
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of(
+                    "action", "answerResult",
+                    "correct", true,
+                    "fastest", true,
+                    "score", player.getScore()
+            ))));
+        } else {
+            // Either incorrect or not the first correct answer
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of(
+                    "action", "answerResult",
+                    "correct", isCorrect,
+                    "fastest", false,
+                    "score", player.getScore()
+            ))));
         }
 
         // Mark player as answered
         player.setHasAnswered(true);
-
-        // Send answer result to player
-        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of(
-                "action", "answerResult",
-                "correct", isCorrect,
-                "score", player.getScore()
-        ))));
 
         // Broadcast updated scores
         broadcastScores(game);
@@ -262,12 +279,26 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
+        // Get the first correct player for this question (if any)
+        String questionKey = game.getId() + "-" + game.getCurrentQuestionIndex();
+        String fastestPlayerId = gameToFirstCorrectPlayerId.get(questionKey);
+
+        // Create result data
+        Map<String, Object> resultData = new HashMap<>();
+        resultData.put("action", "revealAnswer");
+        resultData.put("correctAnswer", currentQuestion.getCorrectAnswer());
+        resultData.put("questionNumber", game.getCurrentQuestionIndex() + 1);
+
+        // Add fastest player info if someone answered correctly
+        if (fastestPlayerId != null) {
+            Player fastestPlayer = game.getPlayer(fastestPlayerId);
+            if (fastestPlayer != null) {
+                resultData.put("fastestPlayer", fastestPlayer.getDisplayName());
+            }
+        }
+
         // Reveal correct answer to all players
-        broadcastToGame(game, objectMapper.writeValueAsString(Map.of(
-                "action", "revealAnswer",
-                "correctAnswer", currentQuestion.getCorrectAnswer(),
-                "questionNumber", game.getCurrentQuestionIndex() + 1
-        )));
+        broadcastToGame(game, objectMapper.writeValueAsString(resultData));
 
         // Schedule next question after delay
         Timer delayTimer = new Timer();
@@ -305,6 +336,11 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
 
             // Broadcast results
             broadcastToGame(game, objectMapper.writeValueAsString(results));
+
+            // Clean up tracking map - remove all entries for this game
+            String gameId = game.getId();
+            gameToFirstCorrectPlayerId.entrySet().removeIf(entry ->
+                    entry.getKey().startsWith(gameId + "-"));
 
         } catch (Exception e) {
             System.err.println("Fehler beim Beenden des Spiels: " + e.getMessage());
