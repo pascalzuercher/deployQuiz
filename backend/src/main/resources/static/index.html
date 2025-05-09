@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Multiplayer Quiz Game</h1>
+        <div id="connection-status">
+            <span id="status-icon" class="status-disconnected"></span>
+            <span id="status-text">Disconnected</span>
+        </div>
+    </header>
+
+    <!-- Login Screen -->
+    <section id="login-screen" class="screen">
+        <div class="card">
+            <h2><i class="fas fa-user-plus"></i> Join the Quiz</h2>
+            <div class="input-group">
+                <label for="player-name">Your Name:</label>
+                <input type="text" id="player-name" placeholder="Enter your name" autocomplete="off">
+            </div>
+            <button id="join-btn" class="btn primary-btn">
+                <i class="fas fa-sign-in-alt"></i> Join Game
+            </button>
+        </div>
+    </section>
+
+    <!-- Waiting Room -->
+    <section id="waiting-room" class="screen hidden">
+        <div class="card">
+            <h2><i class="fas fa-users"></i> Waiting Room</h2>
+            <div class="player-section">
+                <h3><i class="fas fa-user-friends"></i> Players</h3>
+                <ul id="player-list" class="player-list">
+                    <!-- Players will be added here dynamically -->
+                </ul>
+            </div>
+            <div id="host-controls" class="hidden">
+                <div class="host-badge">
+                    <i class="fas fa-crown"></i> You are the host
+                </div>
+                <button id="start-game-btn" class="btn primary-btn">
+                    <i class="fas fa-play"></i> Start Game
+                </button>
+            </div>
+            <p class="waiting-message">
+                <i class="fas fa-hourglass-half fa-spin"></i>
+                Waiting for the host to start the game...
+            </p>
+        </div>
+    </section>
+
+    <!-- Game Screen -->
+    <section id="game-screen" class="screen hidden">
+        <div class="card game-card">
+            <div class="game-header">
+                <div class="question-counter" id="question-counter">Question 1 of 10</div>
+                <div class="timer-container">
+                    <div class="timer-bar-container">
+                        <div class="timer-bar" id="timer-bar"></div>
+                    </div>
+                    <div class="timer-text" id="timer-text">30</div>
+                </div>
+            </div>
+
+            <div class="question-area">
+                <h2 id="question-text">Question text appears here</h2>
+            </div>
+
+            <div id="answers-container" class="answers-container">
+                <!-- Answer buttons will be inserted here -->
+            </div>
+
+            <div id="answer-feedback" class="feedback hidden">
+                <p id="feedback-text"></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div id="scores-display">
+                <h3><i class="fas fa-trophy"></i> Current Scores</h3>
+                <div id="player-scores" class="score-list">
+                    <!-- Player scores will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Screen -->
+    <section id="results-screen" class="screen hidden">
+        <div class="card">
+            <h2><i class="fas fa-flag-checkered"></i> Game Over!</h2>
+            <div id="winner-announcement" class="winner-announcement"></div>
+            <div class="results-container">
+                <h3><i class="fas fa-award"></i> Final Scores</h3>
+                <div id="final-scores" class="score-list">
+                    <!-- Final scores will be inserted here -->
+                </div>
+            </div>
+            <button id="play-again-btn" class="btn primary-btn">
+                <i class="fas fa-redo"></i> Play Again
+            </button>
+        </div>
+    </section>
+</div>
+
+<footer>
+    <p>© 2025 Quiz Game - Created with Spring Boot & WebSockets</p>
+</footer>
+
+<!-- Scripts -->
+<script src="js/websocket.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
