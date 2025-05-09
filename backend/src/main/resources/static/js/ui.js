@@ -294,7 +294,7 @@ const UIManager = (() => {
         elements.timerBar.classList.remove('paused');
         elements.timerBar.style.transition = 'none';
         elements.timerBar.style.width = '0%';
-        elements.timerBar.style.backgroundColor = 'var(--secondary-color)';
+        elements.timerBar.style.backgroundColor = 'var(--success-color)';
 
         // Reflow
         void elements.timerBar.offsetWidth;

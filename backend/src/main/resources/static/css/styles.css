@@ -325,9 +325,10 @@ h1, h2, h3 {
 
 .timer-bar {
     height: 100%;
-    background-color: var(--secondary-color);
+    background-color: var(--success-color); /* statt var(--secondary-color) */
     width: 0%;
 }
+
 
 .timer-bar.paused {
     background-image: repeating-linear-gradient(
