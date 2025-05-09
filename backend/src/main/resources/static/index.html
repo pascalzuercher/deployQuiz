@@ -20,14 +20,45 @@
     <!-- Login Screen -->
     <section id="login-screen" class="screen">
         <div class="card">
-            <h2><i class="fas fa-user-plus"></i> Join the Quiz</h2>
+            <h2><i class="fas fa-user-plus"></i> Join or Create a Game</h2>
             <div class="input-group">
                 <label for="player-name">Your Name:</label>
                 <input type="text" id="player-name" placeholder="Enter your name" autocomplete="off">
             </div>
-            <button id="join-btn" class="btn primary-btn">
-                <i class="fas fa-sign-in-alt"></i> Join Game
-            </button>
+
+            <div class="tabs">
+                <button class="tab-button active" data-tab="join-game">Join Existing Game</button>
+                <button class="tab-button" data-tab="create-game">Create New Game</button>
+            </div>
+
+            <div id="join-game-tab" class="tab-content active">
+                <div class="available-games-section">
+                    <h3><i class="fas fa-gamepad"></i> Available Games</h3>
+                    <div class="games-list-container">
+                        <ul id="available-games-list" class="games-list">
+                            <li class="loading">Loading available games...</li>
+                        </ul>
+                    </div>
+                    <button id="refresh-games-btn" class="btn secondary-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh Games
+                    </button>
+                </div>
+
+                <button id="join-selected-game-btn" class="btn primary-btn" disabled>
+                    <i class="fas fa-sign-in-alt"></i> Join Selected Game
+                </button>
+            </div>
+
+            <div id="create-game-tab" class="tab-content">
+                <div class="input-group">
+                    <label for="new-game-name">Game Name:</label>
+                    <input type="text" id="new-game-name" placeholder="Enter a name for your game" autocomplete="off">
+                </div>
+
+                <button id="create-game-btn" class="btn primary-btn">
+                    <i class="fas fa-plus"></i> Create New Game
+                </button>
+            </div>
         </div>
     </section>
 
@@ -35,6 +66,11 @@
     <section id="waiting-room" class="screen hidden">
         <div class="card">
             <h2><i class="fas fa-users"></i> Waiting Room</h2>
+            <div class="game-info">
+                <h3 id="waiting-room-game-name">Game Name</h3>
+                <p id="waiting-room-game-id" class="game-id">Game ID: xxxxxxxx</p>
+            </div>
+
             <div class="player-section">
                 <h3><i class="fas fa-user-friends"></i> Players</h3>
                 <ul id="player-list" class="player-list">
@@ -53,6 +89,9 @@
                 <i class="fas fa-hourglass-half fa-spin"></i>
                 Waiting for the host to start the game...
             </p>
+            <button id="leave-game-btn" class="btn secondary-btn">
+                <i class="fas fa-arrow-left"></i> Leave Game
+            </button>
         </div>
     </section>
 
@@ -79,6 +118,7 @@
 
             <div id="answer-feedback" class="feedback hidden">
                 <p id="feedback-text"></p>
+                <p id="fastest-player-text" class="fastest-player hidden"></p>
             </div>
         </div>
 

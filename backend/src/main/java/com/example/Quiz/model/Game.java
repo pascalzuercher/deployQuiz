@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
  */
 public class Game {
     private final String id;
+    private String gameName;
     private final List<Question> questions;
     private int currentQuestionIndex;
     private boolean inProgress;
@@ -20,6 +21,7 @@ public class Game {
 
     public Game(String id, List<Question> questions) {
         this.id = id;
+        this.gameName = "Game " + id.substring(0, 5); // Default name is "Game" + first 5 chars of ID
         this.questions = questions;
         this.currentQuestionIndex = 0;
         this.inProgress = false;
@@ -28,6 +30,14 @@ public class Game {
 
     public String getId() {
         return id;
+    }
+
+    public String getGameName() {
+        return gameName;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
     }
 
     public List<Question> getQuestions() {
