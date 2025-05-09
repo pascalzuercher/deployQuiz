@@ -54,13 +54,7 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         System.out.println("Neuer Spieler verbunden: " + session.getId());
-
-        // Default game status message
-        try {
-            session.sendMessage(new TextMessage("{\"action\":\"gameStatus\",\"status\":\"waiting\"}"));
-        } catch (IOException e) {
-            System.err.println("Fehler beim Senden des Spielstatus: " + e.getMessage());
-        }
+        // No longer automatically sending a waiting status
     }
 
     @Override
@@ -79,7 +73,43 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
                     joinSpecificGame(session, gameId, playerName);
                 }
             }
+            case "getAvailableGames" -> handleGetAvailableGames(session);
+            case "createNewGame" -> {
+                if (json.has("name") && json.has("gameName")) {
+                    String playerName = json.get("name").asText();
+                    String gameName = json.get("gameName").asText();
+                    handleCreateNewGame(session, playerName, gameName);
+                }
+            }
         }
+    }
+
+    private void handleGetAvailableGames(WebSocketSession session) throws IOException {
+        List<Map<String, Object>> availableGames = gameManager.getAllGames();
+
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("action", "availableGames");
+        responseData.put("games", availableGames);
+
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(responseData)));
+    }
+
+    private void handleCreateNewGame(WebSocketSession session, String playerName, String gameName) throws IOException {
+        System.out.println("Creating new game: " + gameName + " for player: " + playerName);
+
+        // Create a new game with the specified name
+        List<Question> questions = questionReader.readQuestions("textFiles/questions_2021.txt");
+        String gameId = gameManager.createNewGame(questions, gameName);
+
+        // First, send the game created confirmation
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of(
+                "action", "gameCreated",
+                "gameId", gameId,
+                "gameName", gameName
+        ))));
+
+        // Then, join this new game
+        joinSpecificGame(session, gameId, playerName);
     }
 
     private void handleJoinMessage(WebSocketSession session, JsonNode json) throws IOException {
@@ -90,6 +120,8 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void joinSpecificGame(WebSocketSession session, String gameId, String playerName) throws IOException {
+        System.out.println("Player " + playerName + " is joining game: " + gameId);
+
         Game game = gameManager.getGame(gameId);
 
         if (game == null) {
@@ -113,10 +145,22 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
         if (game.isInProgress()) {
             session.sendMessage(new TextMessage("{\"action\":\"gameStatus\",\"status\":\"inProgress\"}"));
         } else {
+            // Send waiting status with game info
+            Map<String, Object> waitingStatus = new HashMap<>();
+            waitingStatus.put("action", "gameStatus");
+            waitingStatus.put("status", "waiting");
+            waitingStatus.put("gameId", gameId);
+            waitingStatus.put("gameName", game.getGameName());
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(waitingStatus)));
+
             // Make first player the host
             boolean isHost = game.getPlayers().size() == 1;
+            System.out.println("Is player " + playerName + " the host? " + isHost);
             if (isHost) {
-                session.sendMessage(new TextMessage("{\"action\":\"hostStatus\",\"isHost\":true}"));
+                Map<String, Object> hostStatus = new HashMap<>();
+                hostStatus.put("action", "hostStatus");
+                hostStatus.put("isHost", true);
+                session.sendMessage(new TextMessage(objectMapper.writeValueAsString(hostStatus)));
             }
 
             // Broadcast updated player list to all in this game

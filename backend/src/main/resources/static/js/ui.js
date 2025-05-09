@@ -19,13 +19,21 @@ const UIManager = (() => {
         timerText: document.getElementById('timer-text'),
         answerFeedback: document.getElementById('answer-feedback'),
         feedbackText: document.getElementById('feedback-text'),
+        fastestPlayerText: document.getElementById('fastest-player-text'),
         hostControls: document.getElementById('host-controls'),
         winnerAnnouncement: document.getElementById('winner-announcement'),
-        finalScores: document.getElementById('final-scores')
+        finalScores: document.getElementById('final-scores'),
+        availableGamesList: document.getElementById('available-games-list'),
+        waitingRoomGameName: document.getElementById('waiting-room-game-name'),
+        waitingRoomGameId: document.getElementById('waiting-room-game-id'),
+        // Tab elements
+        tabButtons: document.querySelectorAll('.tab-button'),
+        tabContents: document.querySelectorAll('.tab-content'),
+        joinSelectedGameBtn: document.getElementById('join-selected-game-btn')
     };
 
     let activeTimer = null; // aktuell laufender Timer
-
+    let selectedGameId = null; // Selected game ID for joining
 
     // Validate that all needed elements exist
     function validateElements() {
@@ -38,7 +46,7 @@ const UIManager = (() => {
 
         // Check UI elements
         for (const [name, element] of Object.entries(elements)) {
-            if (!element) {
+            if (!element && !Array.isArray(element)) {
                 console.error(`Missing UI element: ${name}`);
             }
         }
@@ -48,6 +56,44 @@ const UIManager = (() => {
     function init() {
         console.log("Initializing UI Manager");
         validateElements();
+
+        // Set up tabs
+        elements.tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                elements.tabButtons.forEach(btn => btn.classList.remove('active'));
+                elements.tabContents.forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const tabId = button.dataset.tab;
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+
+        // Set up game selection
+        document.getElementById('available-games-list').addEventListener('click', (event) => {
+            const gameItem = event.target.closest('.game-item');
+            if (gameItem) {
+                // Deselect all games
+                document.querySelectorAll('.game-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+
+                // Select this game
+                gameItem.classList.add('selected');
+                selectedGameId = gameItem.dataset.gameId;
+                console.log('Selected game:', selectedGameId);
+
+                // Enable the join button
+                if (elements.joinSelectedGameBtn) {
+                    elements.joinSelectedGameBtn.disabled = false;
+                }
+            }
+        });
+
+        // Ensure we're starting at the login screen
+        showScreen('login');
     }
 
     // Show a specific screen, hide others
@@ -87,6 +133,76 @@ const UIManager = (() => {
             li.innerHTML = `<i class="fas fa-user"></i> ${player}`;
             elements.playerList.appendChild(li);
         });
+    }
+
+    // Update available games list
+    function updateAvailableGames(games) {
+        console.log('Updating available games:', games);
+
+        if (!elements.availableGamesList) {
+            console.error("Available games list element not found");
+            return;
+        }
+
+        elements.availableGamesList.innerHTML = '';
+
+        if (!Array.isArray(games) || games.length === 0) {
+            const li = document.createElement('li');
+            li.className = 'no-games';
+            li.innerHTML = 'No games available. Create a new one!';
+            elements.availableGamesList.appendChild(li);
+
+            // Reset selection
+            selectedGameId = null;
+            if (elements.joinSelectedGameBtn) {
+                elements.joinSelectedGameBtn.disabled = true;
+            }
+            return;
+        }
+
+        games.forEach(game => {
+            const li = document.createElement('li');
+            li.className = 'game-item';
+            li.dataset.gameId = game.id;
+
+            const statusClass = game.inProgress ? 'game-in-progress' : 'game-waiting';
+            const statusIcon = game.inProgress ?
+                '<i class="fas fa-play-circle"></i>' :
+                '<i class="fas fa-hourglass-half"></i>';
+
+            li.innerHTML = `
+                <div class="game-item-name">${game.name}</div>
+                <div class="game-item-details">
+                    <span class="game-status ${statusClass}">
+                        ${statusIcon} ${game.inProgress ? 'In Progress' : 'Waiting'}
+                    </span>
+                    <span class="game-players">
+                        <i class="fas fa-users"></i> ${game.playerCount} player${game.playerCount !== 1 ? 's' : ''}
+                    </span>
+                </div>
+            `;
+
+            elements.availableGamesList.appendChild(li);
+        });
+
+        // Reset selection
+        selectedGameId = null;
+        if (elements.joinSelectedGameBtn) {
+            elements.joinSelectedGameBtn.disabled = true;
+        }
+    }
+
+    // Set waiting room game info
+    function setWaitingRoomGameInfo(gameId, gameName) {
+        console.log('Setting waiting room game info:', gameId, gameName);
+
+        if (elements.waitingRoomGameName) {
+            elements.waitingRoomGameName.textContent = gameName || 'Unknown Game';
+        }
+
+        if (elements.waitingRoomGameId) {
+            elements.waitingRoomGameId.textContent = `Game ID: ${gameId ? gameId.substring(0, 8) : 'Unknown'}`;
+        }
     }
 
     // Update scores display during the game
@@ -160,6 +276,10 @@ const UIManager = (() => {
         if (elements.answerFeedback) {
             elements.answerFeedback.classList.add('hidden');
         }
+
+        if (elements.fastestPlayerText) {
+            elements.fastestPlayerText.classList.add('hidden');
+        }
     }
 
     function startTimer(seconds) {
@@ -230,12 +350,9 @@ const UIManager = (() => {
         }
     }
 
-
-
-
     // Show answer feedback
-    function showAnswerFeedback(isCorrect, message) {
-        console.log(`Showing answer feedback: ${isCorrect ? 'Correct' : 'Incorrect'}`);
+    function showAnswerFeedback(isCorrect, message, isFastest) {
+        console.log(`Showing answer feedback: ${isCorrect ? 'Correct' : 'Incorrect'}, Fastest: ${isFastest}`);
 
         if (!elements.answerFeedback || !elements.feedbackText) {
             console.error("Feedback elements not found");
@@ -245,11 +362,30 @@ const UIManager = (() => {
         elements.answerFeedback.classList.remove('hidden', 'correct', 'incorrect');
 
         if (isCorrect) {
-            elements.feedbackText.textContent = message || 'Correct!';
+            let feedbackMessage = message || 'Correct!';
+            if (isFastest) {
+                feedbackMessage += ' You were the fastest!';
+            }
+            elements.feedbackText.textContent = feedbackMessage;
             elements.answerFeedback.classList.add('correct');
         } else {
             elements.feedbackText.textContent = message || 'Incorrect!';
             elements.answerFeedback.classList.add('incorrect');
+        }
+    }
+
+    // Show fastest player
+    function showFastestPlayer(playerName) {
+        if (!elements.fastestPlayerText) {
+            console.error("Fastest player text element not found");
+            return;
+        }
+
+        if (playerName) {
+            elements.fastestPlayerText.textContent = `Fastest correct answer: ${playerName}`;
+            elements.fastestPlayerText.classList.remove('hidden');
+        } else {
+            elements.fastestPlayerText.classList.add('hidden');
         }
     }
 
@@ -345,6 +481,11 @@ const UIManager = (() => {
         });
     }
 
+    // Get the selected game ID
+    function getSelectedGameId() {
+        return selectedGameId;
+    }
+
     // Initialize the UI on load
     init();
 
@@ -359,7 +500,11 @@ const UIManager = (() => {
         selectAnswer,
         stopTimer,
         highlightCorrectAnswer,
-        showGameResults
+        showGameResults,
+        updateAvailableGames,
+        getSelectedGameId,
+        setWaitingRoomGameInfo,
+        showFastestPlayer
     };
 })();
 

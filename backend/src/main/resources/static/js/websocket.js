@@ -7,6 +7,7 @@ const WebSocketManager = (() => {
     let maxReconnectAttempts = 5;
     let reconnectDelay = 2000; // Start with 2 seconds
     let messageHandlers = {};
+    let autoJoinEnabled = false; // Flag to control auto-joining the default game
 
     // DOM Elements
     const statusIcon = document.getElementById('status-icon');
@@ -26,7 +27,10 @@ const WebSocketManager = (() => {
     }
 
     // Connect to WebSocket server
-    function connect() {
+    function connect(enableAutoJoin = false) {
+        // Store auto-join preference
+        autoJoinEnabled = enableAutoJoin;
+
         // Use the appropriate WebSocket URL based on your deployment
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host; // includes hostname and port
@@ -50,12 +54,35 @@ const WebSocketManager = (() => {
         updateConnectionStatus(true);
         reconnectAttempts = 0;
         reconnectDelay = 2000;
+
+        // Trigger getAvailableGames upon connection
+        if (!autoJoinEnabled) {
+            setTimeout(() => {
+                if (isConnected) {
+                    sendMessage({
+                        action: 'getAvailableGames'
+                    });
+                    console.log('Requested available games automatically');
+                }
+            }, 500);
+        }
     }
 
     function handleMessage(event) {
         try {
             const message = JSON.parse(event.data);
             console.log('Received message:', message);
+
+            // Intercept gameStatus message that contains "waiting" without user
+            // having explicitly joined a game - only if auto-join is disabled
+            if (!autoJoinEnabled &&
+                message.action === 'gameStatus' &&
+                message.status === 'waiting' &&
+                !message.gameId) {  // Only ignore if no game ID (means it's not a response to join)
+                // Don't process this message - let the user select a game first
+                console.log('Ignoring auto-join attempt. User must select a game first.');
+                return;
+            }
 
             // Call registered handlers for this message type
             if (message.action && messageHandlers[message.action]) {
@@ -99,7 +126,7 @@ const WebSocketManager = (() => {
 
         setTimeout(() => {
             console.log(`Reconnecting... (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
-            connect();
+            connect(autoJoinEnabled);
         }, delay);
     }
 
@@ -111,6 +138,7 @@ const WebSocketManager = (() => {
         }
 
         try {
+            console.log('Sending message:', message);
             socket.send(JSON.stringify(message));
             return true;
         } catch (error) {
