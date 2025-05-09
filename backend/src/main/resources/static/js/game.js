@@ -24,6 +24,7 @@ const GameManager = (() => {
             if (event.target.classList.contains('answer-btn') && !hasAnswered) {
                 const answer = event.target.dataset.answer;
                 UIManager.selectAnswer(event.target);
+                UIManager.stopTimer();
                 submitAnswer(answer);
             }
         });

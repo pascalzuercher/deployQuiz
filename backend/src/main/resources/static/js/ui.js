@@ -24,6 +24,9 @@ const UIManager = (() => {
         finalScores: document.getElementById('final-scores')
     };
 
+    let activeTimer = null; // aktuell laufender Timer
+
+
     // Validate that all needed elements exist
     function validateElements() {
         // Check screens
@@ -159,7 +162,6 @@ const UIManager = (() => {
         }
     }
 
-    // Start timer animation
     function startTimer(seconds) {
         console.log(`Starting timer for ${seconds} seconds`);
 
@@ -168,23 +170,29 @@ const UIManager = (() => {
             return null;
         }
 
-        // Reset timer bar
-        elements.timerBar.style.width = '100%';
+        // Reset
+        elements.timerBar.classList.remove('paused');
+        elements.timerBar.style.transition = 'none';
+        elements.timerBar.style.width = '0%';
         elements.timerBar.style.backgroundColor = 'var(--secondary-color)';
+
+        // Reflow
+        void elements.timerBar.offsetWidth;
+
+        // Animate
+        elements.timerBar.style.transition = `width ${seconds}s linear, background-color 0.5s ease`;
+        elements.timerBar.style.width = '100%';
+
+        // Set text
         elements.timerText.textContent = seconds;
-
-        // Change color as time runs out
-        setTimeout(() => {
-            elements.timerBar.style.width = '0%';
-        }, 50); // Small delay to ensure the transition works
-
-        // Set timer text countdown
         let timeLeft = seconds;
-        const timerInterval = setInterval(() => {
-            timeLeft--;
 
+        // Start countdown
+        activeTimer = setInterval(() => {
+            timeLeft--;
             if (timeLeft <= 0) {
-                clearInterval(timerInterval);
+                clearInterval(activeTimer);
+                activeTimer = null;
                 timeLeft = 0;
                 elements.timerBar.style.backgroundColor = 'var(--danger-color)';
             } else if (timeLeft <= 5) {
@@ -196,8 +204,34 @@ const UIManager = (() => {
             elements.timerText.textContent = timeLeft;
         }, 1000);
 
-        return timerInterval;
+        return activeTimer;
     }
+
+    function stopTimer() {
+        console.log('Stopping timer');
+
+        if (activeTimer) {
+            clearInterval(activeTimer);
+            activeTimer = null;
+        }
+
+        if (elements.timerBar) {
+            const computedWidth = getComputedStyle(elements.timerBar).width;
+
+            // Stop animation and freeze current state
+            elements.timerBar.style.transition = 'none';
+            elements.timerBar.style.width = computedWidth;
+            elements.timerBar.classList.add('paused');
+            elements.timerBar.style.backgroundColor = 'gray';
+        }
+
+        if (elements.timerText) {
+            elements.timerText.textContent = '⏸'; // Pause-Symbol
+        }
+    }
+
+
+
 
     // Show answer feedback
     function showAnswerFeedback(isCorrect, message) {
@@ -323,6 +357,7 @@ const UIManager = (() => {
         startTimer,
         showAnswerFeedback,
         selectAnswer,
+        stopTimer,
         highlightCorrectAnswer,
         showGameResults
     };

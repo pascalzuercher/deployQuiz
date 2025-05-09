@@ -235,7 +235,7 @@ input[type="text"]:focus {
 
 .timer-bar-container {
     width: 150px;
-    height: 8px;
+    height: 12px;
     background-color: #e9ecef;
     border-radius: 4px;
     overflow: hidden;
@@ -243,9 +243,14 @@ input[type="text"]:focus {
 
 .timer-bar {
     height: 100%;
-    width: 100%;
+    width: 0%; /* Startzustand! */
     background-color: var(--secondary-color);
-    transition: width 1s linear;
+    transition: width 1s linear, background-color 0.5s ease;
+}
+
+.timer-bar.paused {
+    opacity: 0.6;
+    filter: grayscale(100%);
 }
 
 .timer-text {
