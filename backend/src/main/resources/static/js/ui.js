@@ -24,16 +24,60 @@ const UIManager = (() => {
         finalScores: document.getElementById('final-scores')
     };
 
+    // Validate that all needed elements exist
+    function validateElements() {
+        // Check screens
+        for (const [name, element] of Object.entries(screens)) {
+            if (!element) {
+                console.error(`Missing screen element: ${name}-screen`);
+            }
+        }
+
+        // Check UI elements
+        for (const [name, element] of Object.entries(elements)) {
+            if (!element) {
+                console.error(`Missing UI element: ${name}`);
+            }
+        }
+    }
+
+    // Initialize UI
+    function init() {
+        console.log("Initializing UI Manager");
+        validateElements();
+    }
+
     // Show a specific screen, hide others
     function showScreen(screenName) {
+        console.log(`Showing screen: ${screenName}`);
+
+        if (!screens[screenName]) {
+            console.error(`Unknown screen: ${screenName}`);
+            return;
+        }
+
         Object.keys(screens).forEach(name => {
-            screens[name].classList.toggle('hidden', name !== screenName);
+            if (screens[name]) {
+                screens[name].classList.toggle('hidden', name !== screenName);
+            }
         });
     }
 
     // Update player list in waiting room
     function updatePlayerList(players) {
+        console.log('Updating player list:', players);
+
+        if (!elements.playerList) {
+            console.error("Player list element not found");
+            return;
+        }
+
         elements.playerList.innerHTML = '';
+
+        if (!Array.isArray(players)) {
+            console.error("Expected players to be an array, got:", players);
+            return;
+        }
 
         players.forEach(player => {
             const li = document.createElement('li');
@@ -44,7 +88,19 @@ const UIManager = (() => {
 
     // Update scores display during the game
     function updateScores(scores) {
+        console.log('Updating scores:', scores);
+
+        if (!elements.playerScores) {
+            console.error("Player scores element not found");
+            return;
+        }
+
         elements.playerScores.innerHTML = '';
+
+        if (typeof scores !== 'object' || scores === null) {
+            console.error("Expected scores to be an object, got:", scores);
+            return;
+        }
 
         Object.entries(scores).forEach(([name, score]) => {
             const scoreElement = document.createElement('div');
@@ -59,33 +115,59 @@ const UIManager = (() => {
 
     // Display a question and its answers
     function displayQuestion(questionData) {
+        console.log('Displaying question:', questionData);
+
+        if (!elements.questionText || !elements.answersContainer || !elements.questionCounter) {
+            console.error("Question elements not found");
+            return;
+        }
+
         // Update question counter
-        elements.questionCounter.textContent = `Question ${questionData.questionNumber} of ${questionData.totalQuestions}`;
+        if (questionData.questionNumber !== undefined && questionData.totalQuestions !== undefined) {
+            elements.questionCounter.textContent = `Question ${questionData.questionNumber} of ${questionData.totalQuestions}`;
+        }
 
         // Set question text
-        elements.questionText.textContent = questionData.question;
+        if (questionData.question) {
+            elements.questionText.textContent = questionData.question;
+        } else {
+            console.error("Question text is missing from data");
+        }
 
         // Clear previous answers
         elements.answersContainer.innerHTML = '';
 
         // Create answer buttons
-        questionData.answers.forEach(answer => {
-            const button = document.createElement('button');
-            button.className = 'answer-btn';
-            button.textContent = answer;
+        if (Array.isArray(questionData.answers)) {
+            questionData.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = answer;
 
-            // Add data attribute for easier identification
-            button.dataset.answer = answer;
+                // Add data attribute for easier identification
+                button.dataset.answer = answer;
 
-            elements.answersContainer.appendChild(button);
-        });
+                elements.answersContainer.appendChild(button);
+            });
+        } else {
+            console.error("Question answers are missing or not an array");
+        }
 
         // Reset and hide feedback
-        elements.answerFeedback.classList.add('hidden');
+        if (elements.answerFeedback) {
+            elements.answerFeedback.classList.add('hidden');
+        }
     }
 
     // Start timer animation
     function startTimer(seconds) {
+        console.log(`Starting timer for ${seconds} seconds`);
+
+        if (!elements.timerBar || !elements.timerText) {
+            console.error("Timer elements not found");
+            return null;
+        }
+
         // Reset timer bar
         elements.timerBar.style.width = '100%';
         elements.timerBar.style.backgroundColor = 'var(--secondary-color)';
@@ -119,6 +201,13 @@ const UIManager = (() => {
 
     // Show answer feedback
     function showAnswerFeedback(isCorrect, message) {
+        console.log(`Showing answer feedback: ${isCorrect ? 'Correct' : 'Incorrect'}`);
+
+        if (!elements.answerFeedback || !elements.feedbackText) {
+            console.error("Feedback elements not found");
+            return;
+        }
+
         elements.answerFeedback.classList.remove('hidden', 'correct', 'incorrect');
 
         if (isCorrect) {
@@ -132,6 +221,13 @@ const UIManager = (() => {
 
     // Highlight selected answer
     function selectAnswer(answerElement) {
+        console.log('Selecting answer:', answerElement.textContent);
+
+        if (!answerElement) {
+            console.error("Answer element is null");
+            return;
+        }
+
         // Clear previous selections
         document.querySelectorAll('.answer-btn').forEach(btn => {
             btn.classList.remove('selected');
@@ -143,6 +239,13 @@ const UIManager = (() => {
 
     // Highlight the correct answer
     function highlightCorrectAnswer(correctAnswer) {
+        console.log('Highlighting correct answer:', correctAnswer);
+
+        if (!correctAnswer) {
+            console.error("Correct answer is missing");
+            return;
+        }
+
         const answerButtons = document.querySelectorAll('.answer-btn');
 
         answerButtons.forEach(button => {
@@ -158,6 +261,13 @@ const UIManager = (() => {
 
     // Show game results
     function showGameResults(results) {
+        console.log('Showing game results:', results);
+
+        if (!elements.winnerAnnouncement || !elements.finalScores) {
+            console.error("Results elements not found");
+            return;
+        }
+
         showScreen('results');
 
         if (results.winner) {
@@ -169,6 +279,11 @@ const UIManager = (() => {
 
         // Display final scores
         elements.finalScores.innerHTML = '';
+
+        if (typeof results.scores !== 'object' || results.scores === null) {
+            console.error("Expected scores to be an object, got:", results.scores);
+            return;
+        }
 
         const sortedScores = Object.entries(results.scores)
             .sort((a, b) => b[1] - a[1]);
@@ -192,4 +307,26 @@ const UIManager = (() => {
                 <span class="score">${score} points</span>
             `;
 
-            elements.finalScores.appendChild(scoreElement);}
+            elements.finalScores.appendChild(scoreElement);
+        });
+    }
+
+    // Initialize the UI on load
+    init();
+
+    // Public API
+    return {
+        showScreen,
+        updatePlayerList,
+        updateScores,
+        displayQuestion,
+        startTimer,
+        showAnswerFeedback,
+        selectAnswer,
+        highlightCorrectAnswer,
+        showGameResults
+    };
+})();
+
+// Make UIManager globally available
+window.UIManager = UIManager;
