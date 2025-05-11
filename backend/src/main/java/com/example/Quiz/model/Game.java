@@ -21,7 +21,7 @@ public class Game {
 
     public Game(String id, List<Question> questions) {
         this.id = id;
-        this.gameName = "Game " + id.substring(0, 5); // Default name is "Game" + first 5 chars of ID
+        this.gameName = "Game " + id.substring(0, 7); // Default name is "Game" + first 7 chars of ID
         this.questions = questions;
         this.currentQuestionIndex = 0;
         this.inProgress = false;

@@ -46,9 +46,6 @@ public class QuizWebSocketHandler extends TextWebSocketHandler {
         // Create a default game for backward compatibility
         List<Question> questions = questionReader.readQuestions("textFiles/questions_2021.txt");
         gameManager.createGame(DEFAULT_GAME_ID, questions);
-
-        System.out.println("📘 Quiz WebSocket Handler initialized");
-        System.out.println("Trete der Lobby unter: http://localhost:8080 bei. Viel Spass!");
     }
 
     @Override
